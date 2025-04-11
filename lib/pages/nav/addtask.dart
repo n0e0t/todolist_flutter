@@ -1,0 +1,359 @@
+import 'package:flutter/foundation.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter_application_1/main.dart';
+import 'package:flutter_application_1/model/task.dart';
+import 'package:iconsax_flutter/iconsax_flutter.dart';
+
+class Addtask extends StatefulWidget {
+  final VoidCallback onTaskSaved;
+  const Addtask({super.key, required this.onTaskSaved});
+
+  @override
+  State<Addtask> createState() => _AddtaskState();
+}
+
+class _AddtaskState extends State<Addtask> {
+  int selectedPriority = 1;
+  String selectedcategory = "None";
+  TimeOfDay selectedTime = TimeOfDay.now();
+  DateTime selectedDate = DateTime.now();
+
+  final TextEditingController _field1Controller = TextEditingController();
+  final TextEditingController _field2Controller = TextEditingController();
+
+  final FocusNode _focus1 = FocusNode();
+  final FocusNode _focus2 = FocusNode();
+
+  @override
+  void dispose() {
+    _field1Controller.dispose();
+    _field2Controller.dispose();
+    _focus1.dispose();
+    _focus2.dispose();
+    super.dispose();
+  }
+
+Future<void> _selectDate() async {
+  final DateTime? pickedDate = await showDatePicker(
+    context: context,
+    initialDate: selectedDate, 
+    firstDate: DateTime(2025),
+    lastDate: DateTime(2030),
+  );
+
+  if (pickedDate != null) { 
+    setState(() {
+      selectedDate = pickedDate;
+    });
+  }
+}
+
+Future<void> _selectTime() async{
+  final TimeOfDay? timeOfDay = await showTimePicker(
+  context: context,
+  initialTime: selectedTime,
+  initialEntryMode: TimePickerEntryMode.input
+  );
+  if(timeOfDay != null){
+    setState(() {
+      selectedTime = timeOfDay;
+    });
+  }
+}
+
+Future<void> _selectPriority() async{
+  final priority = await _priorityBuilder(context);
+  if (priority != null){
+    setState(() {
+      selectedPriority = priority;
+    });
+  }
+}
+
+Future<void> _selectCategory() async{
+  final category = await _categoryBuilder(context);
+  if (category != null){
+    setState(() {
+      selectedcategory = category;
+    });
+  }
+}
+
+Future<void> sortItems() async {
+  final currentlist = List.from(currentUser.value!.taskList.value);
+  currentlist.sort((a,b) => a.priority.compareTo(b.priority));
+  currentlist.sort((a,b) => a.date.compareTo(b.date));
+  currentUser.value?.taskList.value =  List<Task>.from(currentlist);
+}
+
+  @override
+  Widget build(BuildContext context) {
+    return Center(
+      child: SizedBox(
+        width: 350,
+        child: Container(
+          decoration: BoxDecoration(
+            color: Colors.grey[900],
+            borderRadius: BorderRadius.circular(16),
+          ),
+          padding: const EdgeInsets.all(16.0),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Text(
+                "Add Task",
+                style: TextStyle(color: Colors.white, fontSize: 20),
+              ),
+              const SizedBox(height: 16),
+              _buildCustomTextField("Task Name", _field1Controller, _focus1),
+              const SizedBox(height: 16),
+              _buildCustomTextField("Description", _field2Controller, _focus2),
+              const SizedBox(height: 16),
+              Row(
+                children: [
+                  IconButton(
+                    icon: const Icon(Iconsax.clock, color: Colors.white),
+                    onPressed: () async{
+                      _selectTime();
+                    }, 
+                  ),
+                  IconButton(
+                    icon: const Icon(Iconsax.calendar, color: Colors.white),
+                    onPressed: () async{
+                      _selectDate();
+                    }, 
+                  ),
+                  IconButton(
+                    icon: const Icon(Iconsax.flag, color: Colors.white),
+                    onPressed: () async{
+                      _selectPriority();
+                      }, 
+                  ),
+                  IconButton(
+                    icon:Icon(Iconsax.tag, color: Colors.white,),
+                    onPressed: (){
+                      _selectCategory();
+                    },)
+                ],
+              ),
+              const SizedBox(height: 16),
+              Align(
+                alignment: Alignment.centerRight,
+                child: TextButton(
+                  onPressed: () {
+                    final task = Task(
+                      name: _field1Controller.text, 
+                      description: _field2Controller.text, 
+                      date: selectedDate, 
+                      time: selectedTime, 
+                      priority: selectedPriority,
+                      category: selectedcategory,
+                      status: false
+                      );
+                    
+                    currentUser.value?.taskList.value = [...currentUser.value!.taskList.value, task];
+                    sortItems();
+                    _field1Controller.clear();
+                    _field2Controller.clear();
+                    selectedPriority = 0;
+                    selectedDate = DateTime.now();
+                    selectedTime = TimeOfDay.now();
+                    selectedcategory = 'none';
+                    widget.onTaskSaved();
+                    }, 
+                  child: const Text("Save", style: TextStyle(color: Colors.white)),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+Widget _buildCustomTextField(String hint, TextEditingController controller, FocusNode focusNode) {
+  return Focus(
+    focusNode: focusNode,
+    child: Builder(
+      builder: (context) {
+        final hasFocus = focusNode.hasFocus;
+        return TextField(
+          controller: controller,
+          style: const TextStyle(color: Colors.white),
+          decoration: InputDecoration(
+            hintText: hint,
+            hintStyle: const TextStyle(color: Colors.grey),
+            enabledBorder: hasFocus
+                ? const OutlineInputBorder(
+                    borderSide: BorderSide(color: Colors.white),
+                  )
+                : InputBorder.none,
+            focusedBorder: const OutlineInputBorder(
+              borderSide: BorderSide(color: Colors.white),
+            ),
+            fillColor: Colors.grey[850],
+            filled: true,
+            contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 14),
+          ),
+        );
+      },
+    ),
+  );
+}
+
+
+Future<int?> _priorityBuilder(BuildContext context) async {
+  int? selectedPriority; 
+
+  return showDialog<int?>(
+    context: context,
+    builder: (BuildContext context) {
+      return StatefulBuilder(
+        builder: (BuildContext context, StateSetter setState) {
+          return AlertDialog(
+            title: const Text('Select Task Priority'),
+            content: SingleChildScrollView(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const SizedBox(height: 16),
+                  Wrap(
+                    spacing: 8,
+                    runSpacing: 8,
+                    children: List.generate(10, (index) {
+                      final number = index + 1;
+                      final isSelected = selectedPriority == number;
+                      return SizedBox(
+                        width: 65,
+                        child: ElevatedButton(
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: isSelected
+                                ? Theme.of(context).colorScheme.primary
+                                : null,
+                          ),
+                          onPressed: () {
+                            setState(() {
+                              selectedPriority = number;
+                            });
+                          },
+                          child: Text('$number',
+                          style: TextStyle(color: isSelected? Colors.white:Theme.of(context).colorScheme.primary)
+                          ),
+                        ),
+                      );
+                    }),
+                  ),
+                ],
+              ),
+            ),
+            actions: <Widget>[
+              TextButton(
+                style: TextButton.styleFrom(
+                  textStyle: Theme.of(context).textTheme.labelLarge,
+                ),
+                child: const Text('Cancel'),
+                onPressed: () {
+                  Navigator.of(context).pop(); // Just close
+                },
+              ),
+              TextButton(
+                style: TextButton.styleFrom(
+                  textStyle: Theme.of(context).textTheme.labelLarge,
+                ),
+                child: const Text('Save'),
+                onPressed: () {
+                  if (selectedPriority != null) {
+                    Navigator.of(context).pop(selectedPriority); 
+                  }
+                },
+              ),
+            ],
+          );
+        },
+      );
+    },
+  );
+}
+
+Future<String?> _categoryBuilder(BuildContext context) async {
+  String? selectedCategory; 
+
+  return showDialog<String?>(
+    context: context,
+    builder: (BuildContext context) {
+      return StatefulBuilder(
+        builder: (BuildContext context, StateSetter setState) {
+          return AlertDialog(
+            title: const Text('Select Task Category'),
+            content: SingleChildScrollView(
+              child: Column(
+                mainAxisSize: MainAxisSize.max,
+                children: [
+                  const SizedBox(height: 16),
+                  Wrap(
+                    spacing: 8,
+                    runSpacing: 8,
+                    children: List.generate(catagory_list.length, (index) {
+                      // ignore: non_constant_identifier_names
+                      final cur_category = catagory_list[index];
+                      final isSelected = selectedCategory == cur_category['name'];
+                      return SizedBox(
+                        child: Column(
+                          children: [
+                            SizedBox(
+                              height: 60,
+                              child: ElevatedButton(
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: isSelected
+                                      ? cur_category['color'] as Color
+                                      : null,
+                                ),
+                                onPressed: () {
+                                  setState(() {
+                                    selectedCategory = cur_category['name'] as String?;
+                                  });
+                                },
+                                child: Image.asset("assets/category/${cur_category['name']}.png"),
+                              ),
+                            ),
+                            Text(cur_category['name'] as String,
+                              style: TextStyle(color: isSelected? Colors.red:Theme.of(context).colorScheme.primary)
+                              ),
+                          ],
+                        ),
+                      );
+                    }),
+                  ),
+                ],
+              ),
+            ),
+            actions: <Widget>[
+              TextButton(
+                style: TextButton.styleFrom(
+                  textStyle: Theme.of(context).textTheme.labelLarge,
+                ),
+                child: const Text('Cancel'),
+                onPressed: () {
+                  Navigator.of(context).pop(); // Just close
+                },
+              ),
+              TextButton(
+                style: TextButton.styleFrom(
+                  textStyle: Theme.of(context).textTheme.labelLarge,
+                ),
+                child: const Text('Save'),
+                onPressed: () {
+                  if (selectedCategory != null) {
+                    Navigator.of(context).pop(selectedCategory); 
+                  }
+                },
+              ),
+            ],
+          );
+        },
+      );
+    },
+  );
+}
