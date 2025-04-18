@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+// ignore: must_be_immutable
 class inputform extends StatelessWidget {
   final String lable;
   final String formname;
@@ -26,7 +27,7 @@ class inputform extends StatelessWidget {
         ),
         SizedBox(height: 8,),
         SizedBox(
-          width: 326,
+          width: MediaQuery.sizeOf(context).width-50,
           height: 80,
           child: TextField(
             controller: controller,

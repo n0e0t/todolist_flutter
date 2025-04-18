@@ -60,6 +60,7 @@ class _HomepageState extends State<Navbar> {
         child: const Text("Calendar", style: TextStyle(fontSize: 20,color: Colors.white)),
       ),
       backgroundColor: Colors.black,
+      automaticallyImplyLeading: false,
       centerTitle: true,
     ),
     body: const Calendarscreen(),
@@ -71,6 +72,7 @@ class _HomepageState extends State<Navbar> {
         child: const Text("Focus", style: TextStyle(fontSize: 20,color: Colors.white)),
       ),
       backgroundColor: Colors.black,
+      automaticallyImplyLeading: false,
       centerTitle: true,
     ),
     body: const Focusscreen(),
@@ -82,6 +84,7 @@ class _HomepageState extends State<Navbar> {
         child: const Text("Profile", style: TextStyle(fontSize: 20,color: Colors.white)),
       ),
       backgroundColor: Colors.black,
+      automaticallyImplyLeading: false,
       centerTitle: true,
     ),
     body: const Profilescreen(),
@@ -92,6 +95,7 @@ class _HomepageState extends State<Navbar> {
         child: const Text("Add Task", style: TextStyle(fontSize: 20,color: Colors.white)),
       ),
       backgroundColor: Colors.black,
+      automaticallyImplyLeading: false,
       centerTitle: true,
     ), body: Addtask(
         onTaskSaved: () {
@@ -127,6 +131,7 @@ Widget navItem(int index, IconData icon, String label) {
  @override
 Widget build(BuildContext context,) {
   final _pages = _buildPages();
+  final isKeyboardVisible = MediaQuery.of(context).viewInsets.bottom != 0;
 
   return Scaffold(
     backgroundColor: Colors.black,
@@ -150,7 +155,9 @@ Widget build(BuildContext context,) {
         ),
       ),
     ),
-    floatingActionButton: SizedBox(
+    floatingActionButton: isKeyboardVisible?
+    null
+    : SizedBox(
       width: 70,
       height: 70,
       child: FloatingActionButton(

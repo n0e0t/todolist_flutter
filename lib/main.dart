@@ -4,14 +4,17 @@ import 'package:flutter/material.dart';
 import 'package:flutter_application_1/function/fade_to_page.dart';
 import 'package:flutter_application_1/model/user.dart';
 import 'package:flutter_application_1/pages/intro.dart';
-import 'package:flutter_application_1/pages/login.dart';
-import 'package:flutter_application_1/pages/welcome.dart';
 import 'package:flutter_native_splash/flutter_native_splash.dart';
+import 'package:flutter/services.dart';
 
 void main() {
   WidgetsBinding widgetsBinding = WidgetsFlutterBinding.ensureInitialized();
   FlutterNativeSplash.preserve(widgetsBinding: widgetsBinding);
-  runApp(const MyApp());
+    SystemChrome.setPreferredOrientations([
+    DeviceOrientation.portraitUp,
+  ]).then((_) {
+    runApp(MyApp());
+  });
 }
 
 class MyApp extends StatefulWidget {
@@ -126,7 +129,7 @@ const catagory_list = [
   },
   {
     "name":"None",
-    "color": Colors.white
+    "color": Color.fromRGBO(136, 117, 255,1)
   }
 ];
 

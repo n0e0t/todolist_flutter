@@ -1,7 +1,9 @@
 import 'package:flutter/foundation.dart';
+import 'package:uuid/uuid.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_application_1/main.dart';
 import 'package:flutter_application_1/model/task.dart';
+import 'package:flutter_application_1/pages/loading_dialog.dart';
 import 'package:iconsax_flutter/iconsax_flutter.dart';
 
 class Addtask extends StatefulWidget {
@@ -13,6 +15,8 @@ class Addtask extends StatefulWidget {
 }
 
 class _AddtaskState extends State<Addtask> {
+  final uuid = Uuid();
+  bool check = true;
   int selectedPriority = 1;
   String selectedcategory = "None";
   TimeOfDay selectedTime = TimeOfDay.now();
@@ -62,7 +66,7 @@ Future<void> _selectTime() async{
 }
 
 Future<void> _selectPriority() async{
-  final priority = await _priorityBuilder(context);
+  final priority = await _priorityBuilder(context,selectedPriority);
   if (priority != null){
     setState(() {
       selectedPriority = priority;
@@ -71,7 +75,7 @@ Future<void> _selectPriority() async{
 }
 
 Future<void> _selectCategory() async{
-  final category = await _categoryBuilder(context);
+  final category = await _categoryBuilder(context,selectedcategory);
   if (category != null){
     setState(() {
       selectedcategory = category;
@@ -86,92 +90,122 @@ Future<void> sortItems() async {
   currentUser.value?.taskList.value =  List<Task>.from(currentlist);
 }
 
+Widget _buildFormContent(BuildContext context) {
+  return Column(
+    crossAxisAlignment: CrossAxisAlignment.start,
+    mainAxisSize: MainAxisSize.min,
+    children: [
+      const Text(
+        "Add Task",
+        style: TextStyle(color: Colors.white, fontSize: 20),
+      ),
+      const SizedBox(height: 16),
+      _buildCustomTextFieldwitherror("Task Name", _field1Controller, _focus1, check),
+      const SizedBox(height: 16),
+      _buildCustomTextField("Description", _field2Controller, _focus2),
+      const SizedBox(height: 16),
+      Row(
+        children: [
+          IconButton(
+            icon: const Icon(Iconsax.clock, color: Colors.white),
+            onPressed: _selectTime,
+          ),
+          IconButton(
+            icon: const Icon(Iconsax.calendar, color: Colors.white),
+            onPressed: _selectDate,
+          ),
+          IconButton(
+            icon: const Icon(Iconsax.flag, color: Colors.white),
+            onPressed: _selectPriority,
+          ),
+          IconButton(
+            icon: const Icon(Iconsax.tag, color: Colors.white),
+            onPressed: _selectCategory,
+          ),
+        ],
+      ),
+      const SizedBox(height: 16),
+      Align(
+        alignment: Alignment.centerRight,
+        child: TextButton(
+          onPressed: _saveTask,
+          child: const Text("Save", style: TextStyle(color: Colors.white)),
+        ),
+      ),
+    ],
+  );
+}
+
+void _saveTask() async {
+  if (_field1Controller.text != '') {
+    final task = Task(
+      id: uuid.v4(),
+      name: _field1Controller.text,
+      description: _field2Controller.text,
+      date: selectedDate,
+      time: selectedTime,
+      priority: selectedPriority,
+      category: selectedcategory,
+      status: false,
+    );
+
+    currentUser.value?.taskList.value = [
+      ...currentUser.value!.taskList.value,
+      task
+    ];
+    await sortItems();
+    _field1Controller.clear();
+    _field2Controller.clear();
+    selectedPriority = 0;
+    selectedDate = DateTime.now();
+    selectedTime = TimeOfDay.now();
+    selectedcategory = 'none';
+    setState(() {
+      check = true;
+    });
+
+    showLoadingDialog(context);
+    await Future.delayed(const Duration(seconds: 1));
+    hideLoadingDialog(context);
+    widget.onTaskSaved();
+  } else {
+    setState(() {
+      check = false;
+    });
+  }
+}
+
+
   @override
   Widget build(BuildContext context) {
     return Center(
-      child: SizedBox(
-        width: 350,
-        child: Container(
-          decoration: BoxDecoration(
-            color: Colors.grey[900],
-            borderRadius: BorderRadius.circular(16),
-          ),
-          padding: const EdgeInsets.all(16.0),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              const Text(
-                "Add Task",
-                style: TextStyle(color: Colors.white, fontSize: 20),
+      child: SingleChildScrollView(
+        padding: EdgeInsets.only(
+          bottom: MediaQuery.of(context).viewInsets.bottom + 20,
+          left: 16,
+          right: 16,
+          top: 20,
+        ),
+        child: Align(
+          alignment: Alignment.center,
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 350),
+            child: Container(
+              decoration: BoxDecoration(
+                color: Colors.grey[900],
+                borderRadius: BorderRadius.circular(16),
               ),
-              const SizedBox(height: 16),
-              _buildCustomTextField("Task Name", _field1Controller, _focus1),
-              const SizedBox(height: 16),
-              _buildCustomTextField("Description", _field2Controller, _focus2),
-              const SizedBox(height: 16),
-              Row(
-                children: [
-                  IconButton(
-                    icon: const Icon(Iconsax.clock, color: Colors.white),
-                    onPressed: () async{
-                      _selectTime();
-                    }, 
-                  ),
-                  IconButton(
-                    icon: const Icon(Iconsax.calendar, color: Colors.white),
-                    onPressed: () async{
-                      _selectDate();
-                    }, 
-                  ),
-                  IconButton(
-                    icon: const Icon(Iconsax.flag, color: Colors.white),
-                    onPressed: () async{
-                      _selectPriority();
-                      }, 
-                  ),
-                  IconButton(
-                    icon:Icon(Iconsax.tag, color: Colors.white,),
-                    onPressed: (){
-                      _selectCategory();
-                    },)
-                ],
-              ),
-              const SizedBox(height: 16),
-              Align(
-                alignment: Alignment.centerRight,
-                child: TextButton(
-                  onPressed: () {
-                    final task = Task(
-                      name: _field1Controller.text, 
-                      description: _field2Controller.text, 
-                      date: selectedDate, 
-                      time: selectedTime, 
-                      priority: selectedPriority,
-                      category: selectedcategory,
-                      status: false
-                      );
-                    
-                    currentUser.value?.taskList.value = [...currentUser.value!.taskList.value, task];
-                    sortItems();
-                    _field1Controller.clear();
-                    _field2Controller.clear();
-                    selectedPriority = 0;
-                    selectedDate = DateTime.now();
-                    selectedTime = TimeOfDay.now();
-                    selectedcategory = 'none';
-                    widget.onTaskSaved();
-                    }, 
-                  child: const Text("Save", style: TextStyle(color: Colors.white)),
-                ),
-              ),
-            ],
+              padding: const EdgeInsets.all(16.0),
+              child: _buildFormContent(context),
+            ),
           ),
         ),
       ),
     );
   }
 }
+
+
 
 Widget _buildCustomTextField(String hint, TextEditingController controller, FocusNode focusNode) {
   return Focus(
@@ -203,9 +237,40 @@ Widget _buildCustomTextField(String hint, TextEditingController controller, Focu
   );
 }
 
+Widget _buildCustomTextFieldwitherror(String hint, TextEditingController controller, FocusNode focusNode,bool check) {
+  return Focus(
+    focusNode: focusNode,
+    child: Builder(
+      builder: (context) {
+        final hasFocus = focusNode.hasFocus;
+        return TextField(
+          controller: controller,
+          style: const TextStyle(color: Colors.white),
+          decoration: InputDecoration(
+            errorText: check ? null:"Task Name is empty",
+            hintText: hint,
+            hintStyle: const TextStyle(color: Colors.grey),
+            enabledBorder: hasFocus
+                ? const OutlineInputBorder(
+                    borderSide: BorderSide(color: Colors.white),
+                  )
+                : InputBorder.none,
+            focusedBorder: const OutlineInputBorder(
+              borderSide: BorderSide(color: Colors.white),
+            ),
+            fillColor: Colors.grey[850],
+            filled: true,
+            contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 14),
+          ),
+        );
+      },
+    ),
+  );
+}
 
-Future<int?> _priorityBuilder(BuildContext context) async {
-  int? selectedPriority; 
+
+Future<int?> _priorityBuilder(BuildContext context,int cur_pri) async {
+  int? selectedPriority = cur_pri; 
 
   return showDialog<int?>(
     context: context,
@@ -277,8 +342,8 @@ Future<int?> _priorityBuilder(BuildContext context) async {
   );
 }
 
-Future<String?> _categoryBuilder(BuildContext context) async {
-  String? selectedCategory; 
+Future<String?> _categoryBuilder(BuildContext context,String cur_cat) async {
+  String? selectedCategory = cur_cat; 
 
   return showDialog<String?>(
     context: context,
@@ -289,7 +354,7 @@ Future<String?> _categoryBuilder(BuildContext context) async {
             title: const Text('Select Task Category'),
             content: SingleChildScrollView(
               child: Column(
-                mainAxisSize: MainAxisSize.max,
+                mainAxisSize: MainAxisSize.min,
                 children: [
                   const SizedBox(height: 16),
                   Wrap(

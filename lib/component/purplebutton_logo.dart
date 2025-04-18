@@ -13,7 +13,7 @@ class purplebutton_logo extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return SizedBox(
-      width: 327,
+      width: MediaQuery.sizeOf(context).width-50,
       height: 48,
       child: ElevatedButton(
         onPressed: (){

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+
 void fadeToPage(BuildContext context, Widget page,int duration) {
   Navigator.pushReplacement(
     context,

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_application_1/function/push_to_page.dart';
 import 'package:flutter_application_1/main.dart';
 import 'package:flutter_application_1/model/user.dart';
+import 'package:flutter_application_1/pages/loading_dialog.dart';
 import 'package:flutter_application_1/pages/login.dart';
 import 'package:iconsax_flutter/iconsax_flutter.dart';
 import 'package:image_picker/image_picker.dart';
@@ -125,7 +126,7 @@ class _ProfilescreenState extends State<Profilescreen> {
                               child: Text("Cancel", style: TextStyle(color: Colors.redAccent)),
                             ),
                             ElevatedButton(
-                              onPressed: () {
+                              onPressed: () async {
                                 User? matchedUser;
                                 String newName = nameController.text.trim();
                                 try{
@@ -141,8 +142,12 @@ class _ProfilescreenState extends State<Profilescreen> {
                                 else if (newName.isNotEmpty) {
                                   setStateDialog(() {
                                     uservalidate = false;
-                                    currentUser.value!.username = newName;
+                                    currentUser.value = currentUser.value!..username = newName;
+                                    setState(() {});
                                   });
+                                  showLoadingDialog(context);
+                                  await Future.delayed(Duration(seconds: 1));
+                                  hideLoadingDialog(context);
                                   Navigator.of(context).pop();
                                 }
                               },
@@ -154,6 +159,7 @@ class _ProfilescreenState extends State<Profilescreen> {
                     );
                   },
                 );
+                
               },
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -240,7 +246,7 @@ class _ProfilescreenState extends State<Profilescreen> {
                               child: Text("Cancel", style: TextStyle(color: Colors.redAccent)),
                             ),
                             ElevatedButton(
-                              onPressed: () {
+                              onPressed: () async {
                                 String newPass = passController.text.trim();
                                 String newPassC = passCController.text.trim();
                         
@@ -259,6 +265,9 @@ class _ProfilescreenState extends State<Profilescreen> {
                                     passvalidate = false;
                                     currentUser.value!.password = newPass;
                                   });
+                                  showLoadingDialog(context);
+                                  await Future.delayed(Duration(seconds: 1));
+                                  hideLoadingDialog(context);
                                   Navigator.of(context).pop();
                                 } else {
                                   setStateDialog(() {
@@ -344,9 +353,15 @@ class _ProfilescreenState extends State<Profilescreen> {
                   borderRadius: BorderRadius.circular(8),
                 ),
               ),
-              onPressed: () {
-                pushToPage(context, Login(), 200);
-                currentUser = ValueNotifier(null);
+              onPressed: () async {
+                final shouldLogout = await showLogoutConfirmDialog(context);
+                if (shouldLogout == true) {
+                  showLoadingDialog(context);
+                  await Future.delayed(Duration(seconds: 1));
+                  hideLoadingDialog(context);
+                  pushToPage(context, Login(), 200);
+                  currentUser = ValueNotifier(null);
+                }
               },
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -367,4 +382,40 @@ class _ProfilescreenState extends State<Profilescreen> {
       ),
     );
   }
+}
+
+Future<bool?> showLogoutConfirmDialog(BuildContext context) {
+  return showDialog<bool>(
+    context: context,
+    builder: (context) {
+      return AlertDialog(
+        backgroundColor: Colors.grey[900],
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        title: const Text(
+          'Confirm Logout',
+          style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+        ),
+        content: const Text(
+          'Are you sure you want to logout?',
+          style: TextStyle(color: Colors.white70),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text(
+              'Cancel',
+              style: TextStyle(color: Colors.grey),
+            ),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(context, true),
+            child: const Text(
+              'Logout',
+              style: TextStyle(color: Color.fromRGBO(255, 82, 82, 1)),
+            ),
+          ),
+        ],
+      );
+    },
+  );
 }

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_application_1/main.dart';
 import 'package:flutter_application_1/model/task.dart';
+import 'package:flutter_application_1/pages/loading_dialog.dart';
 import 'package:iconsax_flutter/iconsax_flutter.dart';
 
 class EditTaskPage extends StatefulWidget {
@@ -20,6 +21,7 @@ class _EditTaskPageState extends State<EditTaskPage> {
   late bool status;
   late DateTime selectedDate;
   late TimeOfDay selectedTime;
+  bool check = true;
   
 
   @override
@@ -80,7 +82,7 @@ Future<void> _selectTime(BuildContext context) async {
 }
 
 
-  void saveChanges() {
+  Future<void> saveChanges() async {
     setState(() {
       widget.task.name = nameController.text;
       widget.task.description = descController.text;
@@ -90,7 +92,9 @@ Future<void> _selectTime(BuildContext context) async {
       widget.task.date = selectedDate;
       widget.task.time = selectedTime;
     });
-
+    showLoadingDialog(context);
+    await Future.delayed(Duration(seconds: 1));
+    hideLoadingDialog(context);
     Navigator.pop(context, true); // Return true to signal update
   }
 
@@ -112,7 +116,7 @@ Future<void> _selectTime(BuildContext context) async {
               children: [
                 const Text("Edit Task", style: TextStyle(color: Colors.white, fontSize: 20)),
                 const SizedBox(height: 16),
-                _buildCustomTextField("Task Name", nameController),
+                _buildCustomTextFieldwitherror("Task Name", nameController,check),
                 const SizedBox(height: 16),
                 _buildCustomTextField("Description", descController),
                 const SizedBox(height: 16),
@@ -151,9 +155,34 @@ Future<void> _selectTime(BuildContext context) async {
                 const SizedBox(height: 16),
                 Align(
                   alignment: Alignment.centerRight,
-                  child: TextButton(
-                    onPressed: saveChanges,
-                    child: const Text("Save", style: TextStyle(color: Colors.white)),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.end,
+                    children: [
+                      TextButton(
+                        onPressed: (){
+                          Navigator.pop(context, true);
+                        },
+                        child: const Text("Cancle", style: TextStyle(color: Colors.white)),
+                      ),
+                      TextButton(
+                        onPressed: 
+                        (){
+                          if(widget.task.name != ''){
+                            setState(() {
+                              check = true;
+                            });
+                            saveChanges();
+                          }
+                          else{
+                            setState(() {
+                              check = false;
+                            });
+                          }
+                        }
+                        ,
+                        child: const Text("Save", style: TextStyle(color: Colors.white)),
+                      ),
+                    ],
                   ),
                 ),
               ],
@@ -173,9 +202,7 @@ Future<void> _selectTime(BuildContext context) async {
         hintStyle: const TextStyle(color: Colors.grey),
         filled: true,
         fillColor: Colors.grey[850],
-        enabledBorder: const OutlineInputBorder(
-          borderSide: BorderSide(color: Colors.white),
-        ),
+
         focusedBorder: const OutlineInputBorder(
           borderSide: BorderSide(color: Colors.white),
         ),
@@ -183,6 +210,28 @@ Future<void> _selectTime(BuildContext context) async {
       ),
     );
   }
+}
+
+Widget _buildCustomTextFieldwitherror(String hint, TextEditingController controller,bool check) {
+  return Builder(
+    builder: (context) {
+      return TextField(
+        controller: controller,
+        style: const TextStyle(color: Colors.white),
+        decoration: InputDecoration(
+          errorText: check ? null:"Task Name is empty",
+          hintText: hint,
+          hintStyle: const TextStyle(color: Colors.grey),
+          focusedBorder: const OutlineInputBorder(
+            borderSide: BorderSide(color: Colors.white),
+          ),
+          fillColor: Colors.grey[850],
+          filled: true,
+          contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 14),
+        ),
+      );
+    },
+  );
 }
 
 
@@ -237,7 +286,7 @@ Future<int?> _priorityBuilder(BuildContext context,int currentdPriority) async {
                 ),
                 child: const Text('Cancel'),
                 onPressed: () {
-                  Navigator.of(context).pop(); // Just close
+                  Navigator.of(context).pop(); 
                 },
               ),
               TextButton(

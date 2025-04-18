@@ -37,7 +37,8 @@ dependencies:
   table_calendar: ^3.2.0
   image_picker: ^1.0.4
   path_provider: ^2.1.2
-  introduction_screen: ^3.1.17
+  introduction_screen: ^3.1.1
+  uuid: ^4.2.1
 
 dev_dependencies:
   flutter_test:
@@ -94,12 +95,5 @@ flutter:
   #
   # For details regarding fonts from package dependencies,
   # see https://flutter.dev/to/font-from-package
-
-flutter_native_splash:
-  color: "#000000"
-  image: assets/icons/start.png
-  android_gravity: center
-  ios_content_mode: scaleAspectFit
-  fullscreen: true
 
   

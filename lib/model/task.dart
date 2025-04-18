@@ -2,6 +2,7 @@
 import 'package:flutter/material.dart';
 
 class Task {
+  final String id;
   String name;
   String description;
   DateTime date;
@@ -11,6 +12,7 @@ class Task {
   bool status;
 
   Task({
+    required this.id,
     required this.name,
     required this.description,
     required this.date,
